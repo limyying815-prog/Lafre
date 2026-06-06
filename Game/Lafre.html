@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lafre Mood Game</title>
+<style>
+  body {
+    background-color: #fdedf3;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23ffb6c1' stroke-width='2'%3E%3Cpath d='M50 25 C58 10, 75 10, 65 25 C80 20, 80 35, 65 45 C80 55, 80 75, 65 65 C75 80, 58 80, 50 65 C42 80, 25 80, 35 65 C20 75, 20 55, 35 45 C20 35, 20 20, 35 25 C25 10, 42 10, 50 25 Z' opacity='0.4'/%3E%3Ccircle cx='50' cy='45' r='4' fill='%23ffb6c1' opacity='0.4'/%3E%3C/g%3E%3C/svg%3E");
+    font-family: 'Comic Sans MS', 'Nunito',ci;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 20px;
+    min-height: 100vh;
+    text-align: center;
+    overflow-x: hidden;
+  }
+
+  h1 {
+    color: #eb568a;
+    text-shadow: 2px 2px 0px #d5d0d0;
+    margin-bottom: 20px;
+    font-size: 2.5rem;
+  }
+
+  .game-area {
+    position: relative;
+    max-width: 400px;
+    width: 100%;
+    margin-bottom: 30px;
+    transform-origin: bottom center;
+  }
+
+  .mascot-image {
+    width: 100%;
+    display: block;
+    border-radius: 20px;
+  }
+
+  /* 覆盖在脸上的表情面具 */
+  .face-overlay {
+    position: absolute;
+    top: 31%;
+    left: 35.5%;
+    width: 29%;
+    height: 14%;
+    background-color: #fde4ec; /* 匹配原图脸部的粉色 */
+    border-radius: 50%;
+    box-shadow: 0 0 12px 6px #fde4ec; /* 柔和边缘，自然过渡 */
+    display: none; /* 默认隐藏，保留原本可爱的脸 */
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+  }
+
+  /* --- 身体动作动画 --- */
+  .jump-joy { animation: jump-joy 0.8s cubic-bezier(0.28, 0.84, 0.42, 1); }
+  .droop-sad { animation: droop-sad 1.5s ease-in-out forwards; }
+  .shiver-scared { animation: shiver-scared 0.5s infinite; }
+  .puff-angry { animation: puff-angry 0.6s ease-in-out infinite alternate; }
+
+  @keyframes jump-joy {
+    0%, 100% { transform: translateY(0) scale(1); }
+    30% { transform: translateY(-40px) scale(1.05, 0.95); }
+    50% { transform: translateY(-50px) scale(0.95, 1.05); }
+    70% { transform: translateY(0) scale(1.1, 0.9); }
+  }
+  @keyframes droop-sad {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(15px) scale(1.05, 0.85); filter: grayscale(20%); }
+  }
+  @keyframes shiver-scared {
+    0% { transform: translateX(0) scale(0.95); }
+    25% { transform: translateX(-5px) scale(0.95); }
+    50% { transform: translateX(5px) scale(0.95); }
+    75% { transform: translateX(-5px) scale(0.95); }
+    100% { transform: translateX(0) scale(0.95); }
+  }
+  @keyframes puff-angry {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.1); filter: contrast(120%) saturate(120%); }
+  }
+
+  /* 按钮容器与样式 */
+  .buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    z-index: 20;
+  }
+
+  button {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  button:hover {
+    transform: scale(1.1) translateY(-3px);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+  }
+
+  button:active {
+    transform: scale(0.95);
+  }
+
+  .btn-happy { background-color: #ffb6c1; color: #fff; }
+  .btn-sad { background-color: #a2cffe; color: #fff; }
+  .btn-scared { background-color: #cec2f2; color: #fff; }
+  .btn-angry { background-color: #ff9999; color: #fff; }
+</style>
+</head>
+<body>
+
+  <h1>How are you feeling right now?</h1>
+
+  <div class="game-area" id="mascot">
+    <img src="image/Lafre Mascott-01.png" alt="Mascot" class="mascot-image">
+    
+    <div class="face-overlay" id="face">
+      <!-- 动态变脸的 SVG 会在这里生成 -->
+    </div>
+  </div>
+
+  <div class="buttons-container">
+    <button class="btn-happy" onclick="changeMood('happy')">Happy ✨</button>
+    <button class="btn-sad" onclick="changeMood('sad')">Sad 💧</button>
+    <button class="btn-scared" onclick="changeMood('scared')">Scared 👻</button>
+    <button class="btn-angry" onclick="changeMood('angry')">Angry 💢</button>
+  </div>
+
+  <script>
+    // --- 夸张化升级版的表情 SVG ---
+    const faces = {
+      happy: `
+        <svg width="100%" height="100%" viewBox="0 0 100 50">
+          <!-- 更红润的腮红 -->
+          <ellipse cx="20" cy="30" rx="12" ry="7" fill="#ff7da1" opacity="0.9"/>
+          <ellipse cx="80" cy="30" rx="12" ry="7" fill="#ff7da1" opacity="0.9"/>
+          <!-- 更大的星星眼 -->
+          <circle cx="30" cy="18" r="9" fill="#1e90ff"/>
+          <polygon points="30,11 33,16 38,16 34,20 36,25 30,21 24,25 26,20 22,16 27,16" fill="gold"/>
+          <circle cx="70" cy="18" r="9" fill="#1e90ff"/>
+          <polygon points="70,11 73,16 78,16 74,20 76,25 70,21 64,25 66,20 62,16 67,16" fill="gold"/>
+          <!-- 超级开心的大笑嘴巴 (D字形) -->
+          <path d="M40,25 Q50,25 60,25 Q60,40 50,40 Q40,40 40,25 Z" fill="#7a0026"/>
+          <!-- 露出可爱的小舌头 -->
+          <path d="M45,32 Q50,28 55,32 Q55,40 50,40 Q45,40 45,32 Z" fill="#ff8da1"/>
+        </svg>
+      `,
+      sad: `
+        <svg width="100%" height="100%" viewBox="0 0 100 50">
+          <!-- 委屈的八字眉眼 -->
+          <path d="M20,18 Q30,10 40,24" fill="none" stroke="#4a2e35" stroke-width="4" stroke-linecap="round"/>
+          <path d="M80,18 Q70,10 60,24" fill="none" stroke="#4a2e35" stroke-width="4" stroke-linecap="round"/>
+          <!-- 夸张的瀑布眼泪 -->
+          <path d="M30,24 Q35,35 30,45 Q25,35 30,24 Z" fill="#64b5f6"/>
+          <path d="M70,24 Q75,35 70,45 Q65,35 70,24 Z" fill="#64b5f6"/>
+          <!-- 泪光高光 -->
+          <circle cx="30" cy="40" r="3" fill="#bbdefb"/>
+          <circle cx="70" cy="40" r="3" fill="#bbdefb"/>
+          <!-- 委屈发抖的波浪嘴 -->
+          <path d="M42,35 Q46,31 50,35 Q54,31 58,35" fill="none" stroke="#4a2e35" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      `,
+      scared: `
+        <svg width="100%" height="100%" viewBox="0 0 100 50">
+          <!-- 脸部发青的阴影 -->
+          <ellipse cx="50" cy="25" rx="45" ry="20" fill="#4a90e2" opacity="0.2"/>
+          <!-- 惊恐瞪大的白眼眶和小瞳孔 -->
+          <circle cx="28" cy="20" r="12" fill="white" stroke="#4a2e35" stroke-width="2"/>
+          <circle cx="28" cy="20" r="2" fill="black"/>
+          <circle cx="72" cy="20" r="12" fill="white" stroke="#4a2e35" stroke-width="2"/>
+          <circle cx="72" cy="20" r="2" fill="black"/>
+          <!-- 害怕发抖的折线嘴巴 -->
+          <path d="M40,35 L45,30 L50,35 L55,30 L60,35" fill="none" stroke="#4a2e35" stroke-width="3" stroke-linejoin="round"/>
+          <!-- 额头的一滴冷汗 -->
+          <path d="M15,10 Q20,20 15,25 Q10,20 15,10 Z" fill="#81d4fa"/>
+        </svg>
+      `,
+      angry: `
+        <svg width="100%" height="100%" viewBox="0 0 100 50">
+          <!-- 生气红温效果 -->
+          <ellipse cx="50" cy="25" rx="45" ry="20" fill="#ff4d4d" opacity="0.3"/>
+          <!-- 极具攻击性的犀利眼神 -->
+          <line x1="15" y1="10" x2="40" y2="22" stroke="#4a2e35" stroke-width="5" stroke-linecap="round"/>
+          <line x1="85" y1="10" x2="60" y2="22" stroke="#4a2e35" stroke-width="5" stroke-linecap="round"/>
+          <!-- 缩小的愤怒瞳孔 -->
+          <circle cx="35" cy="24" r="3" fill="#4a2e35"/>
+          <circle cx="65" cy="24" r="3" fill="#4a2e35"/>
+          <!-- 咬牙切齿的嘴巴 -->
+          <path d="M40,30 Q50,25 60,30 L55,40 Q50,42 45,40 Z" fill="#fff" stroke="#4a2e35" stroke-width="2"/>
+          <line x1="45" y1="35" x2="55" y2="35" stroke="#4a2e35" stroke-width="1.5"/>
+          <line x1="50" y1="30" x2="50" y2="40" stroke="#4a2e35" stroke-width="1.5"/>
+        </svg>
+      `
+    };
+
+    const faceElement = document.getElementById('face');
+    const mascotContainer = document.getElementById('mascot');
+    
+    // --- 统一的可爱气泡音效 ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playCuteSound() {
+      if(audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+      
+      gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+      
+      osc.start(audioCtx.currentTime); 
+      osc.stop(audioCtx.currentTime + 0.15);
+    }
+
+    function changeMood(mood) {
+      // 1. 播放可爱的音效
+      playCuteSound();
+
+      // 2. 显示面具，并换上对应的表情
+      faceElement.style.display = 'flex';
+      faceElement.innerHTML = faces[mood];
+
+      // 3. 重置并添加身体动画
+      mascotContainer.className = 'game-area';
+      void mascotContainer.offsetWidth; // 触发浏览器重绘以重新开始动画
+
+      if (mood === 'happy') {
+        mascotContainer.classList.add('jump-joy');
+      } else if (mood === 'sad') {
+        mascotContainer.classList.add('droop-sad');
+      } else if (mood === 'scared') {
+        mascotContainer.classList.add('shiver-scared');
+        // 害怕发抖 1.5 秒后停止
+        setTimeout(() => { mascotContainer.classList.remove('shiver-scared'); }, 1500);
+      } else if (mood === 'angry') {
+        mascotContainer.classList.add('puff-angry');
+        // 生气膨胀 1.2 秒后停止
+        setTimeout(() => { mascotContainer.classList.remove('puff-angry'); }, 1200);
+      }
+    }
+  </script>
+</body>
+</html>
